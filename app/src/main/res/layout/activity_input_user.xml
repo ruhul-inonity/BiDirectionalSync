@@ -5,7 +5,7 @@
     android:id="@+id/activity_input_user"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.inonitylab.bidirectionalsync.InputUserActivity">
+    tools:context="com.inonitylab.bidirectionalsync.activity.InputUserActivity">
 
 
     <android.support.design.widget.TextInputLayout

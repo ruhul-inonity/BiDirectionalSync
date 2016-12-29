@@ -1,4 +1,4 @@
-package com.inonitylab.bidirectionalsync;
+package com.inonitylab.bidirectionalsync.activity;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -20,6 +20,9 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.inonitylab.bidirectionalsync.R;
+import com.inonitylab.bidirectionalsync.db.DBController;
+import com.inonitylab.bidirectionalsync.service.SampleBC;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.BaseJsonHttpResponseHandler;
@@ -63,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
             //Display Sync status of SQLite DB
             Toast.makeText(getApplicationContext(), controller.getSyncStatus(), Toast.LENGTH_LONG).show();
         }
+
         // Initialize Progress Dialog properties
         prgDialog = new ProgressDialog(this);
         prgDialog.setMessage("Transferring Data from Remote MySQL DB and Syncing SQLite. Please wait...");
@@ -96,18 +100,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
         else if (id == R.id.action_refresh) {
             syncSQLiteMySQLDB();
-            syncSQLiteMySQL();
+            syncMySQLSQLite();
             return true;
         }
 
@@ -203,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         params.put("syncsts", json);
-        // Make Http call to updatesyncsts.php with JSON parameter which has Sync statuses of Users
+        // Make Http call to update syncsts.php with JSON parameter which has Sync statuses of Users
         client.post("http://api.inonity.com/BiDirectionalSync/updatesyncsts.php", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] response) {
@@ -225,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(objIntent);
     }
 
-    public void syncSQLiteMySQL(){
+    public void syncMySQLSQLite(){
         //Create AsycHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();

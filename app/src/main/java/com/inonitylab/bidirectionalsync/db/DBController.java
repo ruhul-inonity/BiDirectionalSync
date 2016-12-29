@@ -1,4 +1,4 @@
-package com.inonitylab.bidirectionalsync;
+package com.inonitylab.bidirectionalsync.db;
 
 import android.content.ContentValues;
 import android.content.Context;

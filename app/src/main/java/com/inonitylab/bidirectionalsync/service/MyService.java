@@ -1,4 +1,4 @@
-package com.inonitylab.bidirectionalsync;
+package com.inonitylab.bidirectionalsync.service;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -9,6 +9,9 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.v7.app.NotificationCompat;
 import android.widget.Toast;
+
+import com.inonitylab.bidirectionalsync.activity.MainActivity;
+import com.inonitylab.bidirectionalsync.R;
 
 /**
  * Created by csl on 12/28/16.
