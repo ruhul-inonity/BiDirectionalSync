@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -61,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
                     "userId", "userName" }, new int[] { R.id.userId, R.id.userName });
             ListView myList = (ListView) findViewById(android.R.id.list);
             myList.setAdapter(adapter);
+            //Display Sync status of SQLite DB
+            Toast.makeText(getApplicationContext(), controller.getSyncStatus(), Toast.LENGTH_LONG).show();
         }
         // Initialize Progress Dialog properties
         prgDialog = new ProgressDialog(this);
@@ -80,8 +81,8 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this,InputUserActivity.class);
+                startActivity(intent);
             }
         });
     }
@@ -106,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else if (id == R.id.action_refresh) {
             syncSQLiteMySQLDB();
+            syncSQLiteMySQL();
             return true;
         }
 
@@ -124,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         client.post("http://api.inonity.com/BiDirectionalSync/getusers.php", params, new BaseJsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, String rawJsonResponse, Object response) {
-                prgDialog.hide();
+                //prgDialog.hide();
                 // Update SQLite DB with response sent by getusers.php
                // String response = bytes.toString();
                 Log.d("Main onSuccess","....................... "+ " rawJsonResponses "+rawJsonResponse+" obj res"+response);
@@ -134,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, String rawJsonData, Object errorResponse) {
 
-                prgDialog.hide();
+               // prgDialog.hide();
                 if (statusCode == 404) {
                     Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
                 } else if (statusCode == 500) {
@@ -185,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 // Inform Remote MySQL DB about the completion of Sync activity by passing Sync status of Users
                 updateMySQLSyncSts(gson.toJson(usersynclist));
+                //inform sqlite about mysql update
                 // Reload the Main Activity
                 reloadActivity();
             }
@@ -197,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
     // Method to inform remote MySQL DB about completion of Sync activity
     public void updateMySQLSyncSts(String json) {
         Log.d("Main act updateMySql","...................... Gson made json"+json);
-        System.out.println(json);
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         params.put("syncsts", json);
@@ -222,4 +224,66 @@ public class MainActivity extends AppCompatActivity {
         Intent objIntent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(objIntent);
     }
+
+    public void syncSQLiteMySQL(){
+        //Create AsycHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        RequestParams params = new RequestParams();
+        ArrayList<HashMap<String, String>> userList =  controller.getAllUsers();
+        if(userList.size()!=0){
+            if(controller.dbSyncCount() != 0){
+               // prgDialog.show();
+                params.put("usersJSON", controller.composeJSONfromSQLite());
+                Log.d("composed json from sql",".......................... "+controller.composeJSONfromSQLite());
+                client.post("http://api.inonity.com/BiDirectionalSync/insertuserFromPhn.php",params ,new BaseJsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, String rawJsonResponse, Object response) {
+                        System.out.println(rawJsonResponse);
+                        prgDialog.hide();
+                        try {
+                            JSONArray arr = new JSONArray(rawJsonResponse);
+                            System.out.println(arr.length());
+                            for(int i=0; i<arr.length();i++){
+                                JSONObject obj = (JSONObject)arr.get(i);
+                                System.out.println(obj.get("id"));
+                                System.out.println(obj.get("status"));
+                                controller.updateSyncStatus(obj.get("id").toString(),obj.get("status").toString());
+                            }
+                            Toast.makeText(getApplicationContext(), "DB Sync completed!", Toast.LENGTH_LONG).show();
+                            reloadActivity();
+                        } catch (JSONException e) {
+                            // TODO Auto-generated catch block
+                            Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, String rawJsonData, Object errorResponse) {
+                        // TODO Auto-generated method stub
+                        prgDialog.hide();
+                        if(statusCode == 404){
+                            Toast.makeText(getApplicationContext(), ".........Requested resource not found", Toast.LENGTH_SHORT).show();
+                        }else if(statusCode == 500){
+                            Toast.makeText(getApplicationContext(), ".......Something went wrong at server end", Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(getApplicationContext(), ".......Unexpected Error occcured! [Most common Error: Device might not be connected to Internet]", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    protected Object parseResponse(String rawJsonData, boolean isFailure) throws Throwable {
+                        return null;
+                    }
+
+
+                });
+            }else{
+                Toast.makeText(getApplicationContext(), ".........SQLite and Remote MySQL DBs are in Sync!", Toast.LENGTH_SHORT).show();
+            }
+        }else{
+            Toast.makeText(getApplicationContext(), ".....No data in SQLite DB, please do enter User name to perform Sync action", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }

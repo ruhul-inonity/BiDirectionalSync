@@ -32,6 +32,7 @@ public class SampleBC extends BroadcastReceiver {
         RequestParams params = new RequestParams();
         // Checks if new records are inserted in Remote MySQL DB to proceed with Sync operation
         client.post("http://api.inonity.com/BiDirectionalSync/getdbrowcount.php",params ,new BaseJsonHttpResponseHandler() {
+
             @Override
             public void onSuccess(int statusCode, Header[] headers, String rawJsonResponse, Object response) {
                 Log.d("Sample BC on receive"," response ......................... "+rawJsonResponse);

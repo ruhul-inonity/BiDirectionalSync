@@ -28,15 +28,18 @@
         <service
             android:name=".MyService"
             android:enabled="true" />
-        <!--  Register BroadCase Receiver -->
+        <!-- Register BroadCase Receiver -->
         <receiver
             android:name=".SampleBC"
-            android:process=":remote" >
+            android:process=":remote">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
         </receiver>
+
+        <activity android:name=".InputUserActivity"></activity>
     </application>
 
 </manifest>

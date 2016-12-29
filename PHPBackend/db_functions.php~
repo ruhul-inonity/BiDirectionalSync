@@ -42,7 +42,7 @@ class DB_Functions {
         public function storeUserFromPhn($Id,$User) {
         // Insert user into database
         $Status = 1;
-        $result = mysql_query("INSERT INTO bi_directional_sync(phoneId,Name,syncsts) VALUES($Id,'$User','$Status')");
+        $result = mysql_query("INSERT INTO bi_directional_sync(Name,syncsts) VALUES('$User','$Status')");
  
         if ($result) {
             return true;
